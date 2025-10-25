@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>자리 배정 프로그램</title>
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #f8fafc;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      background-color: #2563eb;
+      color: white;
+      padding: 20px 0;
+      margin-bottom: 20px;
+    }
+    #login-section {
+      margin-bottom: 20px;
+    }
+    #classroom {
+      display: grid;
+      grid-template-columns: repeat(6, 80px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .seat {
+      width: 80px;
+      height: 80px;
+      background-color: #e2e8f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .seat:hover {
+      background-color: #93c5fd;
+      cursor: pointer;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1e40af;
+    }
+    #vote-section {
+      margin-top: 30px;
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎒 자리 배정 프로그램</h1>
+  </header>
+
+  <section id="login-section">
+    <h2>로그인</h2>
+    <input type="text" id="username" placeholder="이름 또는 학번 입력" />
+    <button onclick="login()">로그인</button>
+  </section>
+
+  <section id="seat-section" style="display:none;">
+    <h2>현재 자리 배정표</h2>
+    <div id="classroom"></div>
+
+    <button onclick="randomizeSeats()">무작위 자리 배정 🎲</button>
+    <button onclick="changeSize()">자리 배정 크기 변경</button>
+  </section>
+
+  <section id="vote-section" style="display:none;">
+    <h3>투표하기 🗳️</h3>
+    <p>다른 학생들이 만든 자리 배정표 중 마음에 드는 걸 골라주세요.</p>
+    <button>배정표 1 투표</button>
+    <button>배정표 2 투표</button>
+    <button>배정표 3 투표</button>
+  </section>
+
+  <script>
+    let loggedIn = false;
+    let currentRows = 5;
+    let currentCols = 6;
+    let seats = [];
+
+    function login() {
+      const name = document.getElementById('username').value;
+      if (name.trim() === "") return alert("이름을 입력하세요!");
+      loggedIn = true;
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('seat-section').style.display = 'block';
+      document.getElementById('vote-section').style.display = 'block';
+      generateSeats(currentRows, currentCols);
+    }
+
+    function generateSeats(rows, cols) {
+      const container = document.getElementById('classroom');
+      container.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+      container.innerHTML = "";
+      seats = [];
+      for (let i = 0; i < rows * cols; i++) {
+        const seat = document.createElement('div');
+        seat.classList.add('seat');
+        seat.textContent = i + 1;
+        seats.push(seat);
+        container.appendChild(seat);
+      }
+    }
+
+    function randomizeSeats() {
+      seats.sort(() => Math.random() - 0.5);
+      const container = document.getElementById('classroom');
+      container.innerHTML = "";
+      seats.forEach(seat => container.appendChild(seat));
+    }
+
+    function changeSize() {
+      const size = prompt("자리 크기 입력 (예: 5x6, 7x5)");
+      if (!size) return;
+      const [rows, cols] = size.toLowerCase().split('x').map(Number);
+      if (!rows || !cols) return alert("잘못된 형식입니다!");
+      currentRows = rows;
+      currentCols = cols;
+      generateSeats(rows, cols);
+    }
+  </script>
+
+</body>
+</html>
