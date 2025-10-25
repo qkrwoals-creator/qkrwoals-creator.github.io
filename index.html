@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>자리 배정 프로그램</title>
 <style>
-  body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; margin:0; background: linear-gradient(135deg, #3b82f6, #93c5fd); color: #1e3a8a; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  body { font-family: 'Pretendard','Noto Sans KR',sans-serif; margin:0; background: linear-gradient(135deg,#3b82f6,#93c5fd); color:#1e3a8a; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
   header { position:sticky; top:0; width:100%; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: #1e3a8a; text-align:center; padding:15px 0; font-weight:700; font-size:1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:10; }
   main { background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius:20px; box-shadow:0 5px 25px rgba(0,0,0,0.2); width:90%; max-width:900px; padding:30px; margin:40px 0; }
   h2 { color: #1d4ed8; }
   input, textarea { border:none; border-radius:10px; padding:12px; width:80%; max-width:400px; margin:8px 0; font-size:1rem; background: rgba(255,255,255,0.9); box-shadow:0 1px 4px rgba(0,0,0,0.1); outline:none; transition:0.3s; }
   input:focus, textarea:focus { box-shadow:0 0 6px rgba(59,130,246,0.8); }
   button { background: linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; border-radius:8px; padding:10px 16px; margin:6px; cursor:pointer; font-weight:600; transition:0.25s ease; box-shadow:0 3px 10px rgba(37,99,235,0.3); }
-  button:hover { background: linear-gradient(135deg, #1e40af, #2563eb); transform: translateY(-2px); box-shadow:0 5px 15px rgba(37,99,235,0.4); }
-  #classroom { display:grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap:10px; margin-top:20px; }
+  button:hover { background: linear-gradient(135deg,#1e40af,#2563eb); transform: translateY(-2px); box-shadow:0 5px 15px rgba(37,99,235,0.4); }
+  #classroom { display:grid; gap:10px; margin-top:20px; }
   .seat { background: rgba(255,255,255,0.85); border-radius:12px; height:80px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#1e3a8a; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition: all 0.25s ease; cursor:grab; }
   .seat:hover { transform: scale(1.05); background: #dbeafe; }
   .seat.dragging { opacity:0.5; transform: scale(1.1); background: #bfdbfe; }
@@ -37,6 +37,11 @@
     <h3>학생 목록 입력 / CSV 업로드</h3>
     <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력"></textarea><br>
     <input type="file" id="csvFile" accept=".csv"><button onclick="loadCSV()">CSV 업로드</button><br>
+    
+    <h3>자리 배치 행 x 열 설정</h3>
+    <input type="number" id="rows" placeholder="행 수" min="1" style="width:35%;"> x 
+    <input type="number" id="cols" placeholder="열 수" min="1" style="width:35%;"><br>
+
     <button onclick="createSeats()">자리 만들기 🪑</button>
     <button onclick="shuffleWithAnimation()">자리 섞기 🎲</button>
     <button onclick="exportImage()">PNG 저장 📸</button>
@@ -55,76 +60,84 @@
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-let loggedInUser = null;
-let students = [];
-let seats = [];
-let draggedSeat = null;
-let votes = {};
-let voteSection = document.getElementById("vote-section");
+let loggedInUser=null;
+let students=[];
+let seats=[];
+let draggedSeat=null;
+let votes={};
+let voteSection=document.getElementById("vote-section");
 
-// 로그인
 function login(){
-  const name = document.getElementById("username").value.trim();
+  const name=document.getElementById("username").value.trim();
   if(!name) return alert("이름을 입력하세요!");
-  loggedInUser = name;
+  loggedInUser=name;
   document.getElementById("login-section").style.display="none";
   document.getElementById("seat-section").style.display="block";
   document.getElementById("welcome").innerText=`${name}님, 환영합니다 👋`;
   loadSeats();
 }
 
-// CSV 읽기
 function loadCSV(){
-  const file = document.getElementById("csvFile").files[0];
+  const file=document.getElementById("csvFile").files[0];
   if(!file) return alert("파일 선택 필요");
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const text = e.target.result;
-    students = text.split("\n").map(s=>s.trim()).filter(s=>s);
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const text=e.target.result;
+    students=text.split("\n").map(s=>s.trim()).filter(s=>s);
     document.getElementById("studentList").value=students.join("\n");
-    generateSeats(students);
     updateInfo(`${students.length}명의 학생 목록 로드 ✅`);
   };
   reader.readAsText(file,"UTF-8");
 }
 
-// 자리 생성
 function createSeats(){
-  const list = document.getElementById("studentList").value.trim();
+  const list=document.getElementById("studentList").value.trim();
+  const rows=parseInt(document.getElementById("rows").value);
+  const cols=parseInt(document.getElementById("cols").value);
+
   if(!list) return alert("학생 목록을 입력하세요!");
+  if(!rows || !cols) return alert("행과 열을 입력하세요!");
   students=list.split("\n").map(s=>s.trim()).filter(s=>s);
-  generateSeats(students);
-  updateInfo(`총 ${students.length}명의 학생 자리 생성 완료 ✅`);
+
+  if(rows*cols < students.length){
+    return alert(`행 x 열이 학생 수보다 작습니다! 학생: ${students.length}, 자리: ${rows*cols}`);
+  }
+
+  generateSeats(students, rows, cols);
+  updateInfo(`총 ${students.length}명의 학생, ${rows}행 x ${cols}열로 자리 생성 ✅`);
 }
 
-// 자리 DOM 생성
-function generateSeats(names){
+function generateSeats(names, rows, cols){
   const container=document.getElementById("classroom");
   container.innerHTML="";
+  container.style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
   seats=[];
-  names.forEach(name=>{
-    const seat=document.createElement("div");
-    seat.classList.add("seat");
-    seat.textContent=name;
-    seat.draggable=true;
-    seat.addEventListener("dragstart",e=>{draggedSeat=seat; seat.classList.add("dragging");});
-    seat.addEventListener("dragend",e=>{seat.classList.remove("dragging"); draggedSeat=null; saveSeats();});
-    seat.addEventListener("dragover",e=>e.preventDefault());
-    seat.addEventListener("drop",e=>{
-      e.preventDefault();
-      if(draggedSeat && draggedSeat!==seat){
-        [seat.textContent, draggedSeat.textContent]=[draggedSeat.textContent, seat.textContent];
-        saveSeats();
-      }
-    });
-    seats.push(seat);
-    container.appendChild(seat);
-  });
+  let idx=0;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const seat=document.createElement("div");
+      seat.classList.add("seat");
+      seat.textContent=names[idx] || ""; // 빈 자리
+      seat.draggable=true;
+      seat.addEventListener("dragstart",e=>{draggedSeat=seat; seat.classList.add("dragging");});
+      seat.addEventListener("dragend",e=>{seat.classList.remove("dragging"); draggedSeat=null; saveSeats();});
+      seat.addEventListener("dragover",e=>e.preventDefault());
+      seat.addEventListener("drop",e=>{
+        e.preventDefault();
+        if(draggedSeat && draggedSeat!==seat){
+          [seat.textContent, draggedSeat.textContent]=[draggedSeat.textContent, seat.textContent];
+          saveSeats();
+        }
+      });
+      seats.push(seat);
+      container.appendChild(seat);
+      idx++;
+    }
+  }
   votes={};
   voteSection.style.display="none";
 }
 
-// 자리 섞기 애니메이션
 function shuffleWithAnimation(){
   if(seats.length===0) return;
   let iterations=5;
@@ -132,7 +145,7 @@ function shuffleWithAnimation(){
   const info=document.getElementById("info");
   const interval=setInterval(()=>{
     for(let s of seats){
-      s.textContent=students[Math.floor(Math.random()*students.length)];
+      s.textContent=students[Math.floor(Math.random()*students.length)] || "";
     }
     info.innerText=["어떻게 나올까요?","잠깐만요...","조금만 기다려요..."][count%3];
     count++;
@@ -151,7 +164,6 @@ function shuffleWithAnimation(){
   },500);
 }
 
-// 투표
 function vote(agree){
   if(!loggedInUser) return;
   votes[loggedInUser]=agree;
@@ -169,35 +181,44 @@ function vote(agree){
   }
 }
 
-// 저장
 function saveSeats(){
   if(!loggedInUser) return;
   const current=seats.map(s=>s.textContent);
   localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
   localStorage.setItem(`students_${loggedInUser}`, document.getElementById("studentList").value);
+  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value, cols:document.getElementById("cols").value}));
 }
 
-// 불러오기
 function loadSeats(){
   const saved=localStorage.getItem(`seats_${loggedInUser}`);
   const list=localStorage.getItem(`students_${loggedInUser}`);
+  const grid=localStorage.getItem(`grid_${loggedInUser}`);
   if(list) document.getElementById("studentList").value=list;
-  if(saved) generateSeats(JSON.parse(saved));
+  if(grid){
+    const g=JSON.parse(grid);
+    document.getElementById("rows").value=g.rows;
+    document.getElementById("cols").value=g.cols;
+  }
+  if(saved){
+    const g=grid ? JSON.parse(grid) : {rows:5, cols:6};
+    generateSeats(JSON.parse(saved), g.rows, g.cols);
+  }
 }
 
-// 초기화
 function resetSeats(){
   if(confirm("모든 데이터를 삭제하시겠습니까?")){
     localStorage.removeItem(`seats_${loggedInUser}`);
     localStorage.removeItem(`students_${loggedInUser}`);
+    localStorage.removeItem(`grid_${loggedInUser}`);
     document.getElementById("studentList").value="";
+    document.getElementById("rows").value="";
+    document.getElementById("cols").value="";
     document.getElementById("classroom").innerHTML="";
     updateInfo("자리 배정이 초기화되었습니다 🧹");
     voteSection.style.display="none";
   }
 }
 
-// PNG 저장
 function exportImage(){
   html2canvas(document.getElementById("classroom")).then(canvas=>{
     const link=document.createElement("a");
