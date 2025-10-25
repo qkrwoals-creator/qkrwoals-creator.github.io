@@ -100,10 +100,11 @@ footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
 <header>🎒 자리 배정 프로그램</header>
 <main>
 <section id="login-section">
-  <h2>로그인</h2>
+  <h2>로그인 / 회원가입</h2>
   <input type="text" id="username" placeholder="이름 또는 학번 입력"><br>
   <input type="password" id="password" placeholder="비밀번호 입력"><br>
   <button onclick="login()">로그인</button>
+  <button onclick="register()">회원가입</button>
 </section>
 
 <section id="seat-section" style="display:none;">
@@ -142,6 +143,20 @@ let seats=[];
 let votes={};
 let voteSection=document.getElementById("vote-section");
 
+// 회원가입
+function register(){
+  const name = document.getElementById("username").value.trim();
+  const pw = document.getElementById("password").value;
+  if(!name || !pw) return alert("이름과 비밀번호를 모두 입력하세요!");
+
+  if(localStorage.getItem(`pw_${name}`)){
+    return alert("이미 존재하는 이름입니다. 다른 이름을 사용하세요.");
+  }
+
+  localStorage.setItem(`pw_${name}`, pw);
+  alert("회원가입 완료 ✅ 이제 로그인해주세요.");
+}
+
 // 로그인
 function login(){
   const name = document.getElementById("username").value.trim();
@@ -149,11 +164,8 @@ function login(){
   if(!name || !pw) return alert("이름과 비밀번호를 모두 입력하세요!");
 
   const savedPw = localStorage.getItem(`pw_${name}`);
-  if(savedPw){
-    if(savedPw !== pw) return alert("비밀번호가 틀렸습니다!");
-  } else {
-    localStorage.setItem(`pw_${name}`, pw);
-  }
+  if(!savedPw) return alert("등록되지 않은 사용자입니다. 회원가입 해주세요.");
+  if(savedPw !== pw) return alert("비밀번호가 틀렸습니다!");
 
   loggedInUser = name;
   document.getElementById("login-section").style.display = "none";
