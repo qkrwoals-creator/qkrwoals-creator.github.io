@@ -102,6 +102,7 @@ footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
 <section id="login-section">
   <h2>로그인</h2>
   <input type="text" id="username" placeholder="이름 또는 학번 입력"><br>
+  <input type="password" id="password" placeholder="비밀번호 입력"><br>
   <button onclick="login()">로그인</button>
 </section>
 
@@ -141,16 +142,27 @@ let seats=[];
 let votes={};
 let voteSection=document.getElementById("vote-section");
 
+// 로그인
 function login(){
-  const name=document.getElementById("username").value.trim();
-  if(!name) return alert("이름을 입력하세요!");
-  loggedInUser=name;
-  document.getElementById("login-section").style.display="none";
-  document.getElementById("seat-section").style.display="block";
-  document.getElementById("welcome").innerText=`${name}님, 환영합니다 👋`;
+  const name = document.getElementById("username").value.trim();
+  const pw = document.getElementById("password").value;
+  if(!name || !pw) return alert("이름과 비밀번호를 모두 입력하세요!");
+
+  const savedPw = localStorage.getItem(`pw_${name}`);
+  if(savedPw){
+    if(savedPw !== pw) return alert("비밀번호가 틀렸습니다!");
+  } else {
+    localStorage.setItem(`pw_${name}`, pw);
+  }
+
+  loggedInUser = name;
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("seat-section").style.display = "block";
+  document.getElementById("welcome").innerText = `${name}님, 환영합니다 👋`;
   loadSeats();
 }
 
+// CSV 업로드
 function loadCSV(){
   const file=document.getElementById("csvFile").files[0];
   if(!file) return alert("파일 선택 필요");
@@ -164,6 +176,7 @@ function loadCSV(){
   reader.readAsText(file,"UTF-8");
 }
 
+// 자리 생성
 function createSeats(){
   const list=document.getElementById("studentList").value.trim();
   const rows=parseInt(document.getElementById("rows").value);
@@ -181,6 +194,7 @@ function createSeats(){
   updateInfo(`총 ${students.length}명의 학생, ${rows}행 x ${cols}열로 자리 생성 ✅`);
 }
 
+// 자리 표시
 function generateSeats(names, rows, cols){
   const container=document.getElementById("classroom");
   container.innerHTML="";
@@ -188,7 +202,7 @@ function generateSeats(names, rows, cols){
 
   let idx=0;
   for(let r=0;r<rows;r++){
-    let line=""; // 한 줄 문자열
+    let line="";
     for(let c=0;c<cols;c++){
       const seatName = names[idx] || "빈자리";
       const span=document.createElement("span");
@@ -209,16 +223,17 @@ function generateSeats(names, rows, cols){
       });
 
       seats.push(span);
-      line += seatName + " "; // 띄어쓰기
+      line += seatName + " ";
       idx++;
     }
-    container.innerHTML += line + "<br>"; // 자동 줄바꿈
+    container.innerHTML += line + "<br>";
   }
 
   votes={};
   voteSection.style.display="none";
 }
 
+// 자리 섞기 애니메이션
 function shuffleWithAnimation(){
   if(seats.length===0) return;
   let iterations=5;
@@ -228,57 +243,41 @@ function shuffleWithAnimation(){
     for(let s of seats){
       s.textContent=students[Math.floor(Math.random()*students.length)] || "빈자리";
     }
-    info.innerText=["어떻게 나올까요?","잠깐만요...","조금만 기다려요..."][count%3];
+    info.innerText=["어떻게 될까요? 🤔","잠깐만 기다려주세요 ⏳","조금만 더..."][count%3];
     count++;
     if(count>=iterations){
       clearInterval(interval);
-      seats.sort(()=>Math.random()-0.5);
-      const container=document.getElementById("classroom");
-      container.innerHTML="";
-      const rows=parseInt(document.getElementById("rows").value);
-      const cols=parseInt(document.getElementById("cols").value);
-      let idx=0;
-      for(let r=0;r<rows;r++){
-        let line="";
-        for(let c=0;c<cols;c++){
-          const seat=seats[idx];
-          line += seat.textContent + " ";
-          idx++;
-        }
-        container.innerHTML += line + "<br>";
-      }
-      saveSeats();
-      info.innerText="자리 섞기 완료! ✅ 투표를 진행해주세요.";
       voteSection.style.display="block";
-      votes={};
-      document.getElementById("vote-info").innerText="";
+      updateInfo("자리 섞기 완료! 승인 투표를 진행하세요 ✅");
     }
-  },500);
+  },400);
 }
 
-function vote(agree){
-  if(!loggedInUser) return;
-  votes[loggedInUser]=agree;
-  document.getElementById("vote-info").innerText=`현재 투표: ${Object.keys(votes).length}명`;
-  const total=students.length;
-  const yes=Object.values(votes).filter(v=>v).length;
-  if(Object.keys(votes).length===total){
-    if(yes>total/2){
-      updateInfo("과반수 승인! 자리 확정 ✅");
-      voteSection.style.display="none";
-    }else{
-      updateInfo("과반수 미달! 자리 다시 섞습니다 🔄");
-      setTimeout(()=>shuffleWithAnimation(),1000);
-    }
+// 투표
+function vote(choice){
+  votes[loggedInUser]=choice;
+  const allVotes=Object.values(votes);
+  const approveCount=allVotes.filter(v=>v===true).length;
+  const needed=Math.ceil(Object.keys(votes).length/2) || 1;
+
+  document.getElementById("vote-info").innerText=`찬성 ${approveCount} / 필요 ${needed}명`;
+
+  if(approveCount>=needed){
+    voteSection.style.display="none";
+    saveSeats();
+    updateInfo("과반수 승인 완료! 자리 확정 ✅");
+  } else {
+    updateInfo("과반수 미달, 다시 섞습니다 🔄");
+    shuffleWithAnimation();
   }
 }
 
+// 저장 & 불러오기
 function saveSeats(){
   if(!loggedInUser) return;
-  const current=seats.map(s=>s.textContent);
-  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
-  localStorage.setItem(`students_${loggedInUser}`, document.getElementById("studentList").value);
-  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value,cols:document.getElementById("cols").value}));
+  localStorage.setItem(`students_${loggedInUser}`, students.join("\n"));
+  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value, cols:document.getElementById("cols").value}));
+  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(seats.map(s=>s.textContent)));
 }
 
 function loadSeats(){
@@ -298,8 +297,10 @@ function loadSeats(){
   }
 }
 
+// 상태 표시
 function updateInfo(msg){ document.getElementById("info").innerText=msg; }
 
+// PNG 저장
 function exportImage(){
   html2canvas(document.getElementById("classroom")).then(canvas=>{
     const link=document.createElement("a");
@@ -309,6 +310,7 @@ function exportImage(){
   });
 }
 
+// 초기화
 function resetSeats(){
   students=[];
   seats=[];
