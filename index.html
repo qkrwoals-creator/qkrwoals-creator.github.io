@@ -5,56 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>자리 배정 프로그램</title>
 <style>
-  body { font-family: 'Pretendard','Noto Sans KR',sans-serif; margin:0; background: linear-gradient(135deg,#3b82f6,#93c5fd); color:#1e3a8a; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
-  header { position:sticky; top:0; width:100%; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: #1e3a8a; text-align:center; padding:15px 0; font-weight:700; font-size:1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:10; }
-  main { background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius:20px; box-shadow:0 5px 25px rgba(0,0,0,0.2); width:90%; max-width:900px; padding:30px; margin:40px 0; }
-  h2 { color: #1d4ed8; }
-  input, textarea { border:none; border-radius:10px; padding:12px; width:80%; max-width:400px; margin:8px 0; font-size:1rem; background: rgba(255,255,255,0.9); box-shadow:0 1px 4px rgba(0,0,0,0.1); outline:none; transition:0.3s; }
-  input:focus, textarea:focus { box-shadow:0 0 6px rgba(59,130,246,0.8); }
-  button { background: linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; border-radius:8px; padding:10px 16px; margin:6px; cursor:pointer; font-weight:600; transition:0.25s ease; box-shadow:0 3px 10px rgba(37,99,235,0.3); }
-  button:hover { background: linear-gradient(135deg,#1e40af,#2563eb); transform: translateY(-2px); box-shadow:0 5px 15px rgba(37,99,235,0.4); }
-  #classroom { display:grid; gap:10px; margin-top:20px; }
-  .seat { background: rgba(255,255,255,0.85); border-radius:12px; height:80px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#1e3a8a; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition: all 0.25s ease; cursor:grab; }
-  .seat:hover { transform: scale(1.05); background: #dbeafe; }
-  .seat.dragging { opacity:0.5; transform: scale(1.1); background: #bfdbfe; }
-  footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
-  #info { color:#475569; margin-top:10px; font-size:0.9rem; min-height:20px; }
-  #vote-section { margin-top:20px; display:none; }
-  @media(max-width:600px){.seat{height:70px;font-size:0.9rem;}}
+body {
+  font-family: 'Pretendard','Noto Sans KR',sans-serif;
+  margin:0;
+  background: linear-gradient(135deg,#3b82f6,#93c5fd);
+  color:#1e3a8a;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+header {
+  position:sticky;
+  top:0;
+  width:100%;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  color: #1e3a8a;
+  text-align:center;
+  padding:15px 0;
+  font-weight:700;
+  font-size:1.5rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  z-index:10;
+}
+main {
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(15px);
+  border-radius:20px;
+  box-shadow:0 5px 25px rgba(0,0,0,0.2);
+  width:90%;
+  max-width:900px;
+  padding:30px;
+  margin:40px 0;
+}
+h2 { color: #1d4ed8; }
+input, textarea {
+  border:none;
+  border-radius:10px;
+  padding:12px;
+  width:80%;
+  max-width:400px;
+  margin:8px 0;
+  font-size:1rem;
+  background: rgba(255,255,255,0.9);
+  box-shadow:0 1px 4px rgba(0,0,0,0.1);
+  outline:none;
+  transition:0.3s;
+}
+input:focus, textarea:focus {
+  box-shadow:0 0 6px rgba(59,130,246,0.8);
+}
+button {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:10px 16px;
+  margin:6px;
+  cursor:pointer;
+  font-weight:600;
+  transition:0.25s ease;
+  box-shadow:0 3px 10px rgba(37,99,235,0.3);
+}
+button:hover {
+  background: linear-gradient(135deg,#1e40af,#2563eb);
+  transform: translateY(-2px);
+  box-shadow:0 5px 15px rgba(37,99,235,0.4);
+}
+#classroom {
+  margin-top:20px;
+  font-weight:600;
+  color:#1e3a8a;
+  min-height:200px;
+  line-height:1.8;
+  font-size:1rem;
+  white-space:pre; /* 공백 유지 */
+}
+.seat {
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:8px;
+  background: rgba(255,255,255,0.85);
+  margin:2px;
+  cursor:grab;
+}
+.seat.dragging { opacity:0.5; background: #bfdbfe; }
+footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
+#info { color:#475569; margin-top:10px; font-size:0.9rem; min-height:20px; }
+#vote-section { margin-top:20px; display:none; }
 </style>
 </head>
 <body>
 <header>🎒 자리 배정 프로그램</header>
 <main>
-  <section id="login-section">
-    <h2>로그인</h2>
-    <input type="text" id="username" placeholder="이름 또는 학번 입력"><br>
-    <button onclick="login()">로그인</button>
-  </section>
+<section id="login-section">
+  <h2>로그인</h2>
+  <input type="text" id="username" placeholder="이름 또는 학번 입력"><br>
+  <button onclick="login()">로그인</button>
+</section>
 
-  <section id="seat-section" style="display:none;">
-    <h2 id="welcome"></h2>
-    <h3>학생 목록 입력 / CSV 업로드</h3>
-    <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력"></textarea><br>
-    <input type="file" id="csvFile" accept=".csv"><button onclick="loadCSV()">CSV 업로드</button><br>
-    
-    <h3>자리 배치 행 x 열 설정</h3>
-    <input type="number" id="rows" placeholder="행 수" min="1" style="width:35%;"> x 
-    <input type="number" id="cols" placeholder="열 수" min="1" style="width:35%;"><br>
+<section id="seat-section" style="display:none;">
+  <h2 id="welcome"></h2>
+  <h3>학생 목록 입력 / CSV 업로드</h3>
+  <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력"></textarea><br>
+  <input type="file" id="csvFile" accept=".csv"><button onclick="loadCSV()">CSV 업로드</button><br>
 
-    <button onclick="createSeats()">자리 만들기 🪑</button>
-    <button onclick="shuffleWithAnimation()">자리 섞기 🎲</button>
-    <button onclick="exportImage()">PNG 저장 📸</button>
-    <button onclick="resetSeats()">초기화 🔄</button>
-    <div id="classroom"></div>
-    <div id="info"></div>
-    <div id="vote-section">
-      <h3>자리표를 승인할까요?</h3>
-      <button onclick="vote(true)">찬성 👍</button>
-      <button onclick="vote(false)">반대 👎</button>
-      <div id="vote-info"></div>
-    </div>
-  </section>
+  <h3>자리 배치 행 x 열 설정</h3>
+  <input type="number" id="rows" placeholder="행 수" min="1" style="width:35%;"> x 
+  <input type="number" id="cols" placeholder="열 수" min="1" style="width:35%;"><br>
+
+  <button onclick="createSeats()">자리 만들기 🪑</button>
+  <button onclick="shuffleWithAnimation()">자리 섞기 🎲</button>
+  <button onclick="exportImage()">PNG 저장 📸</button>
+  <button onclick="resetSeats()">초기화 🔄</button>
+
+  <div id="classroom"></div>
+  <div id="info"></div>
+
+  <div id="vote-section">
+    <h3>자리표를 승인할까요?</h3>
+    <button onclick="vote(true)">찬성 👍</button>
+    <button onclick="vote(false)">반대 👎</button>
+    <div id="vote-info"></div>
+  </div>
+</section>
 </main>
 <footer>© 2025 자리 배정 시스템</footer>
 
@@ -63,7 +138,6 @@
 let loggedInUser=null;
 let students=[];
 let seats=[];
-let draggedSeat=null;
 let votes={};
 let voteSection=document.getElementById("vote-section");
 
@@ -110,30 +184,37 @@ function createSeats(){
 function generateSeats(names, rows, cols){
   const container=document.getElementById("classroom");
   container.innerHTML="";
-  container.style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
   seats=[];
+
   let idx=0;
   for(let r=0;r<rows;r++){
+    let line=""; // 한 줄 문자열
     for(let c=0;c<cols;c++){
-      const seat=document.createElement("div");
-      seat.classList.add("seat");
-      seat.textContent=names[idx] || ""; // 빈 자리
-      seat.draggable=true;
-      seat.addEventListener("dragstart",e=>{draggedSeat=seat; seat.classList.add("dragging");});
-      seat.addEventListener("dragend",e=>{seat.classList.remove("dragging"); draggedSeat=null; saveSeats();});
-      seat.addEventListener("dragover",e=>e.preventDefault());
-      seat.addEventListener("drop",e=>{
-        e.preventDefault();
-        if(draggedSeat && draggedSeat!==seat){
-          [seat.textContent, draggedSeat.textContent]=[draggedSeat.textContent, seat.textContent];
+      const seatName = names[idx] || "빈자리";
+      const span=document.createElement("span");
+      span.classList.add("seat");
+      span.textContent = seatName;
+
+      // 드래그 이벤트
+      span.draggable=true;
+      span.addEventListener("dragstart",e=>{span.classList.add("dragging"); e.dataTransfer.setData("text/plain","");});
+      span.addEventListener("dragend",e=>{span.classList.remove("dragging"); saveSeats();});
+      span.addEventListener("dragover",e=>e.preventDefault());
+      span.addEventListener("drop",e=>{
+        const dragging=document.querySelector(".dragging");
+        if(dragging && dragging!==span){
+          [span.textContent, dragging.textContent]=[dragging.textContent, span.textContent];
           saveSeats();
         }
       });
-      seats.push(seat);
-      container.appendChild(seat);
+
+      seats.push(span);
+      line += seatName + " "; // 띄어쓰기
       idx++;
     }
+    container.innerHTML += line + "<br>"; // 자동 줄바꿈
   }
+
   votes={};
   voteSection.style.display="none";
 }
@@ -145,7 +226,7 @@ function shuffleWithAnimation(){
   const info=document.getElementById("info");
   const interval=setInterval(()=>{
     for(let s of seats){
-      s.textContent=students[Math.floor(Math.random()*students.length)] || "";
+      s.textContent=students[Math.floor(Math.random()*students.length)] || "빈자리";
     }
     info.innerText=["어떻게 나올까요?","잠깐만요...","조금만 기다려요..."][count%3];
     count++;
@@ -154,7 +235,18 @@ function shuffleWithAnimation(){
       seats.sort(()=>Math.random()-0.5);
       const container=document.getElementById("classroom");
       container.innerHTML="";
-      seats.forEach(s=>container.appendChild(s));
+      const rows=parseInt(document.getElementById("rows").value);
+      const cols=parseInt(document.getElementById("cols").value);
+      let idx=0;
+      for(let r=0;r<rows;r++){
+        let line="";
+        for(let c=0;c<cols;c++){
+          const seat=seats[idx];
+          line += seat.textContent + " ";
+          idx++;
+        }
+        container.innerHTML += line + "<br>";
+      }
       saveSeats();
       info.innerText="자리 섞기 완료! ✅ 투표를 진행해주세요.";
       voteSection.style.display="block";
@@ -186,49 +278,48 @@ function saveSeats(){
   const current=seats.map(s=>s.textContent);
   localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
   localStorage.setItem(`students_${loggedInUser}`, document.getElementById("studentList").value);
-  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value, cols:document.getElementById("cols").value}));
+  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value,cols:document.getElementById("cols").value}));
 }
 
 function loadSeats(){
-  const saved=localStorage.getItem(`seats_${loggedInUser}`);
-  const list=localStorage.getItem(`students_${loggedInUser}`);
-  const grid=localStorage.getItem(`grid_${loggedInUser}`);
-  if(list) document.getElementById("studentList").value=list;
-  if(grid){
-    const g=JSON.parse(grid);
-    document.getElementById("rows").value=g.rows;
-    document.getElementById("cols").value=g.cols;
-  }
-  if(saved){
-    const g=grid ? JSON.parse(grid) : {rows:5, cols:6};
-    generateSeats(JSON.parse(saved), g.rows, g.cols);
+  if(!loggedInUser) return;
+  const savedSeats=JSON.parse(localStorage.getItem(`seats_${loggedInUser}`)||"[]");
+  const savedStudents=localStorage.getItem(`students_${loggedInUser}`)||"";
+  const savedGrid=JSON.parse(localStorage.getItem(`grid_${loggedInUser}`)||"{}");
+
+  if(savedStudents) document.getElementById("studentList").value=savedStudents;
+  if(savedGrid.rows) document.getElementById("rows").value=savedGrid.rows;
+  if(savedGrid.cols) document.getElementById("cols").value=savedGrid.cols;
+
+  if(savedSeats.length>0){
+    students=savedSeats.filter(s=>s!=="빈자리");
+    generateSeats(students, savedGrid.rows, savedGrid.cols);
+    updateInfo("이전 자리 배치 불러오기 ✅");
   }
 }
 
-function resetSeats(){
-  if(confirm("모든 데이터를 삭제하시겠습니까?")){
-    localStorage.removeItem(`seats_${loggedInUser}`);
-    localStorage.removeItem(`students_${loggedInUser}`);
-    localStorage.removeItem(`grid_${loggedInUser}`);
-    document.getElementById("studentList").value="";
-    document.getElementById("rows").value="";
-    document.getElementById("cols").value="";
-    document.getElementById("classroom").innerHTML="";
-    updateInfo("자리 배정이 초기화되었습니다 🧹");
-    voteSection.style.display="none";
-  }
-}
+function updateInfo(msg){ document.getElementById("info").innerText=msg; }
 
 function exportImage(){
   html2canvas(document.getElementById("classroom")).then(canvas=>{
     const link=document.createElement("a");
-    link.download="자리배정.png";
+    link.download="seats.png";
     link.href=canvas.toDataURL();
     link.click();
   });
 }
 
-function updateInfo(msg){ document.getElementById("info").innerText=msg; }
+function resetSeats(){
+  students=[];
+  seats=[];
+  votes={};
+  document.getElementById("classroom").innerHTML="";
+  document.getElementById("studentList").value="";
+  document.getElementById("rows").value="";
+  document.getElementById("cols").value="";
+  voteSection.style.display="none";
+  updateInfo("초기화 완료 🔄");
+}
 </script>
 </body>
 </html>
