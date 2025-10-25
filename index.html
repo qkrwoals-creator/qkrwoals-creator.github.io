@@ -1,222 +1,240 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>자리 배정 프로그램</title>
-  <style>
-    body {
-      font-family: 'Pretendard', sans-serif;
-      background-color: #f8fafc;
-      color: #333;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-    }
-    header {
-      background-color: #2563eb;
-      color: white;
-      padding: 20px 0;
-      margin-bottom: 20px;
-    }
-    #login-section {
-      margin-bottom: 20px;
-    }
-    #classroom {
-      display: grid;
-      grid-template-columns: repeat(6, 80px);
-      grid-gap: 10px;
-      justify-content: center;
-      margin: 20px 0;
-    }
-    .seat {
-      width: 80px;
-      height: 80px;
-      background-color: #e2e8f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: background 0.3s;
-    }
-    .seat:hover {
-      background-color: #93c5fd;
-      cursor: pointer;
-    }
-    button {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 15px;
-      margin: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #1e40af;
-    }
-    #vote-section {
-      margin-top: 30px;
-      background: #f1f5f9;
-      padding: 15px;
-      border-radius: 8px;
-      display: inline-block;
-    }
-    #info {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고급 자리 배정 프로그램</title>
+<style>
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    color: #1e3a8a;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    min-height: 100vh;
+  }
+  header {
+    background-color: #1d4ed8;
+    color: white;
+    padding: 25px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  h1 { margin: 0; font-size: 1.8rem; }
+  main {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  }
+  input, textarea {
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    padding: 10px;
+    width: 80%;
+    max-width: 400px;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 10px;
+  }
+  input:focus, textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 4px rgba(37,99,235,0.5);
+  }
+  button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.25s ease;
+  }
+  button:hover {
+    background-color: #1e40af;
+    transform: translateY(-2px);
+  }
+  #classroom {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    grid-gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .seat {
+    background: #e0e7ff;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #1e3a8a;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+  .seat.dragging {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+  .seat:hover {
+    background: #93c5fd;
+    transform: scale(1.05);
+  }
+  footer {
+    margin-top: 30px;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+  #info { color: #475569; margin-top: 10px; font-size: 0.9rem; }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>🎒 자리 배정 프로그램</h1>
-  </header>
+<header>
+  <h1>🎓 고급 자리 배정 프로그램</h1>
+</header>
 
+<main>
   <!-- 로그인 -->
   <section id="login-section">
     <h2>로그인</h2>
-    <input type="text" id="username" placeholder="이름 또는 학번 입력" />
+    <input type="text" id="username" placeholder="이름 또는 학번 입력">
     <button onclick="login()">로그인</button>
   </section>
 
-  <!-- 자리 배정 영역 -->
+  <!-- 자리 배정 -->
   <section id="seat-section" style="display:none;">
     <h2 id="welcome"></h2>
+
+    <h3>학생 목록 입력</h3>
+    <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력하세요"></textarea><br>
+    <button onclick="createSeats()">자리 만들기 🪑</button>
+    <button onclick="randomizeSeats()">무작위 섞기 🎲</button>
+    <button onclick="saveSeats()">저장 💾</button>
+    <button onclick="resetSeats()">초기화 🔄</button>
+
     <div id="classroom"></div>
-
-    <button onclick="randomizeSeats()">무작위 자리 배정 🎲</button>
-    <button onclick="changeSize()">자리 배정 크기 변경</button>
-    <button onclick="saveSeats()">자리 저장 💾</button>
-    <button onclick="resetSeats()">자리 초기화 🔄</button>
-
     <div id="info"></div>
   </section>
+</main>
 
-  <!-- 투표 섹션 -->
-  <section id="vote-section" style="display:none;">
-    <h3>투표하기 🗳️</h3>
-    <p>다른 학생들이 만든 자리 배정표 중 마음에 드는 걸 골라주세요.</p>
-    <div>
-      <button onclick="vote(1)">배정표 1 투표</button>
-      <button onclick="vote(2)">배정표 2 투표</button>
-      <button onclick="vote(3)">배정표 3 투표</button>
-    </div>
-    <p id="vote-result"></p>
-  </section>
+<footer>© 2025 자리 배정 시스템</footer>
 
-  <script>
-    let loggedInUser = null;
-    let currentRows = 5;
-    let currentCols = 6;
-    let seats = [];
+<script>
+let loggedInUser = null;
+let students = [];
+let seats = [];
+let draggedSeat = null;
 
-    function login() {
-      const name = document.getElementById('username').value.trim();
-      if (name === "") return alert("이름을 입력하세요!");
-      loggedInUser = name;
+// ✅ 로그인
+function login() {
+  const name = document.getElementById('username').value.trim();
+  if (name === "") return alert("이름을 입력하세요!");
+  loggedInUser = name;
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('seat-section').style.display = 'block';
+  document.getElementById('welcome').innerText = `${name}님, 환영합니다 👋`;
+  loadSeats();
+}
 
-      document.getElementById('login-section').style.display = 'none';
-      document.getElementById('seat-section').style.display = 'block';
-      document.getElementById('vote-section').style.display = 'block';
-      document.getElementById('welcome').innerText = `안녕하세요, ${name}님 👋`;
+// 🎓 학생 목록 → 자리 생성
+function createSeats() {
+  const list = document.getElementById('studentList').value.trim();
+  if (!list) return alert("학생 목록을 입력하세요!");
+  students = list.split("\n").filter(s => s.trim() !== "");
+  generateSeats(students);
+  updateInfo(`총 ${students.length}명의 학생 자리 생성 완료 ✅`);
+}
 
-      loadSeats();
-      updateInfo("이전 자리 배정이 불러와졌거나, 새로 생성되었습니다.");
-    }
+// 🪑 자리 생성 함수
+function generateSeats(names) {
+  const container = document.getElementById('classroom');
+  container.innerHTML = "";
+  seats = [];
 
-    function generateSeats(rows, cols, saved = []) {
-      const container = document.getElementById('classroom');
-      container.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
-      container.innerHTML = "";
-      seats = [];
+  names.forEach((name, idx) => {
+    const seat = document.createElement('div');
+    seat.classList.add('seat');
+    seat.textContent = name;
+    seat.draggable = true;
 
-      for (let i = 0; i < rows * cols; i++) {
-        const seat = document.createElement('div');
-        seat.classList.add('seat');
-        seat.textContent = saved[i] || i + 1;
-        seats.push(seat);
-        container.appendChild(seat);
+    // 드래그 이벤트
+    seat.addEventListener('dragstart', e => {
+      draggedSeat = seat;
+      seat.classList.add('dragging');
+    });
+    seat.addEventListener('dragend', e => {
+      seat.classList.remove('dragging');
+      draggedSeat = null;
+      saveSeats();
+    });
+    seat.addEventListener('dragover', e => e.preventDefault());
+    seat.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedSeat && draggedSeat !== seat) {
+        const temp = seat.textContent;
+        seat.textContent = draggedSeat.textContent;
+        draggedSeat.textContent = temp;
+        saveSeats();
       }
-    }
+    });
 
-    function randomizeSeats() {
-      seats.sort(() => Math.random() - 0.5);
-      const container = document.getElementById('classroom');
-      container.innerHTML = "";
-      seats.forEach(seat => container.appendChild(seat));
-      updateInfo("자리가 무작위로 섞였습니다!");
-    }
+    seats.push(seat);
+    container.appendChild(seat);
+  });
+}
 
-    function changeSize() {
-      const size = prompt("자리 크기 입력 (예: 5x6, 7x5)");
-      if (!size) return;
-      const [rows, cols] = size.toLowerCase().split('x').map(Number);
-      if (!rows || !cols) return alert("잘못된 형식입니다!");
-      currentRows = rows;
-      currentCols = cols;
-      generateSeats(rows, cols);
-      updateInfo(`자리 배정 크기가 ${rows}x${cols}로 변경되었습니다.`);
-    }
+// 🎲 무작위 자리 섞기
+function randomizeSeats() {
+  seats.sort(() => Math.random() - 0.5);
+  const container = document.getElementById('classroom');
+  container.innerHTML = "";
+  seats.forEach(seat => container.appendChild(seat));
+  saveSeats();
+  updateInfo("자리를 무작위로 섞었습니다 🎲");
+}
 
-    function saveSeats() {
-      if (!loggedInUser) return;
-      const seatData = seats.map(seat => seat.textContent);
-      localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify({
-        rows: currentRows,
-        cols: currentCols,
-        seats: seatData
-      }));
-      updateInfo("자리 배정이 저장되었습니다 ✅");
-    }
+// 💾 저장 (localStorage)
+function saveSeats() {
+  if (!loggedInUser) return;
+  const current = seats.map(s => s.textContent);
+  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
+  localStorage.setItem(`students_${loggedInUser}`, document.getElementById('studentList').value);
+  updateInfo("자리 배정이 저장되었습니다 ✅");
+}
 
-    function loadSeats() {
-      const saved = localStorage.getItem(`seats_${loggedInUser}`);
-      if (saved) {
-        const data = JSON.parse(saved);
-        currentRows = data.rows;
-        currentCols = data.cols;
-        generateSeats(data.rows, data.cols, data.seats);
-      } else {
-        generateSeats(currentRows, currentCols);
-      }
-    }
+// 📥 불러오기
+function loadSeats() {
+  const saved = localStorage.getItem(`seats_${loggedInUser}`);
+  const list = localStorage.getItem(`students_${loggedInUser}`);
+  if (list) document.getElementById('studentList').value = list;
+  if (saved) {
+    const data = JSON.parse(saved);
+    generateSeats(data);
+    updateInfo("이전 자리 배정을 불러왔습니다 📂");
+  }
+}
 
-    function resetSeats() {
-      if (confirm("자리 배정을 초기화하시겠습니까?")) {
-        localStorage.removeItem(`seats_${loggedInUser}`);
-        generateSeats(currentRows, currentCols);
-        updateInfo("자리 배정이 초기화되었습니다 🧹");
-      }
-    }
+// 🔁 초기화
+function resetSeats() {
+  if (confirm("모든 데이터를 삭제하시겠습니까?")) {
+    localStorage.removeItem(`seats_${loggedInUser}`);
+    localStorage.removeItem(`students_${loggedInUser}`);
+    document.getElementById('studentList').value = "";
+    document.getElementById('classroom').innerHTML = "";
+    updateInfo("자리 배정이 초기화되었습니다 🧹");
+  }
+}
 
-    // 간단한 투표 기능 (localStorage 이용)
-    function vote(choice) {
-      const key = `votes_${choice}`;
-      let count = localStorage.getItem(key);
-      count = count ? Number(count) + 1 : 1;
-      localStorage.setItem(key, count);
-      showVotes();
-    }
-
-    function showVotes() {
-      const v1 = localStorage.getItem('votes_1') || 0;
-      const v2 = localStorage.getItem('votes_2') || 0;
-      const v3 = localStorage.getItem('votes_3') || 0;
-      document.getElementById('vote-result').innerText =
-        `현재 투표 현황 → ① ${v1}표 | ② ${v2}표 | ③ ${v3}표`;
-    }
-
-    function updateInfo(msg) {
-      document.getElementById('info').innerText = msg;
-    }
-
-    // 투표 현황 실시간 표시
-    window.onload = () => showVotes();
-  </script>
-
+// 메시지 표시
+function updateInfo(msg) {
+  document.getElementById('info').innerText = msg;
+}
+</script>
 </body>
 </html>
