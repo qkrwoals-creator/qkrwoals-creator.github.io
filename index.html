@@ -63,6 +63,11 @@
       border-radius: 8px;
       display: inline-block;
     }
+    #info {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -71,53 +76,68 @@
     <h1>🎒 자리 배정 프로그램</h1>
   </header>
 
+  <!-- 로그인 -->
   <section id="login-section">
     <h2>로그인</h2>
     <input type="text" id="username" placeholder="이름 또는 학번 입력" />
     <button onclick="login()">로그인</button>
   </section>
 
+  <!-- 자리 배정 영역 -->
   <section id="seat-section" style="display:none;">
-    <h2>현재 자리 배정표</h2>
+    <h2 id="welcome"></h2>
     <div id="classroom"></div>
 
     <button onclick="randomizeSeats()">무작위 자리 배정 🎲</button>
     <button onclick="changeSize()">자리 배정 크기 변경</button>
+    <button onclick="saveSeats()">자리 저장 💾</button>
+    <button onclick="resetSeats()">자리 초기화 🔄</button>
+
+    <div id="info"></div>
   </section>
 
+  <!-- 투표 섹션 -->
   <section id="vote-section" style="display:none;">
     <h3>투표하기 🗳️</h3>
     <p>다른 학생들이 만든 자리 배정표 중 마음에 드는 걸 골라주세요.</p>
-    <button>배정표 1 투표</button>
-    <button>배정표 2 투표</button>
-    <button>배정표 3 투표</button>
+    <div>
+      <button onclick="vote(1)">배정표 1 투표</button>
+      <button onclick="vote(2)">배정표 2 투표</button>
+      <button onclick="vote(3)">배정표 3 투표</button>
+    </div>
+    <p id="vote-result"></p>
   </section>
 
   <script>
-    let loggedIn = false;
+    let loggedInUser = null;
     let currentRows = 5;
     let currentCols = 6;
     let seats = [];
 
     function login() {
-      const name = document.getElementById('username').value;
-      if (name.trim() === "") return alert("이름을 입력하세요!");
-      loggedIn = true;
+      const name = document.getElementById('username').value.trim();
+      if (name === "") return alert("이름을 입력하세요!");
+      loggedInUser = name;
+
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('seat-section').style.display = 'block';
       document.getElementById('vote-section').style.display = 'block';
-      generateSeats(currentRows, currentCols);
+      document.getElementById('welcome').innerText = `안녕하세요, ${name}님 👋`;
+
+      loadSeats();
+      updateInfo("이전 자리 배정이 불러와졌거나, 새로 생성되었습니다.");
     }
 
-    function generateSeats(rows, cols) {
+    function generateSeats(rows, cols, saved = []) {
       const container = document.getElementById('classroom');
       container.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
       container.innerHTML = "";
       seats = [];
+
       for (let i = 0; i < rows * cols; i++) {
         const seat = document.createElement('div');
         seat.classList.add('seat');
-        seat.textContent = i + 1;
+        seat.textContent = saved[i] || i + 1;
         seats.push(seat);
         container.appendChild(seat);
       }
@@ -128,6 +148,7 @@
       const container = document.getElementById('classroom');
       container.innerHTML = "";
       seats.forEach(seat => container.appendChild(seat));
+      updateInfo("자리가 무작위로 섞였습니다!");
     }
 
     function changeSize() {
@@ -138,7 +159,63 @@
       currentRows = rows;
       currentCols = cols;
       generateSeats(rows, cols);
+      updateInfo(`자리 배정 크기가 ${rows}x${cols}로 변경되었습니다.`);
     }
+
+    function saveSeats() {
+      if (!loggedInUser) return;
+      const seatData = seats.map(seat => seat.textContent);
+      localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify({
+        rows: currentRows,
+        cols: currentCols,
+        seats: seatData
+      }));
+      updateInfo("자리 배정이 저장되었습니다 ✅");
+    }
+
+    function loadSeats() {
+      const saved = localStorage.getItem(`seats_${loggedInUser}`);
+      if (saved) {
+        const data = JSON.parse(saved);
+        currentRows = data.rows;
+        currentCols = data.cols;
+        generateSeats(data.rows, data.cols, data.seats);
+      } else {
+        generateSeats(currentRows, currentCols);
+      }
+    }
+
+    function resetSeats() {
+      if (confirm("자리 배정을 초기화하시겠습니까?")) {
+        localStorage.removeItem(`seats_${loggedInUser}`);
+        generateSeats(currentRows, currentCols);
+        updateInfo("자리 배정이 초기화되었습니다 🧹");
+      }
+    }
+
+    // 간단한 투표 기능 (localStorage 이용)
+    function vote(choice) {
+      const key = `votes_${choice}`;
+      let count = localStorage.getItem(key);
+      count = count ? Number(count) + 1 : 1;
+      localStorage.setItem(key, count);
+      showVotes();
+    }
+
+    function showVotes() {
+      const v1 = localStorage.getItem('votes_1') || 0;
+      const v2 = localStorage.getItem('votes_2') || 0;
+      const v3 = localStorage.getItem('votes_3') || 0;
+      document.getElementById('vote-result').innerText =
+        `현재 투표 현황 → ① ${v1}표 | ② ${v2}표 | ③ ${v3}표`;
+    }
+
+    function updateInfo(msg) {
+      document.getElementById('info').innerText = msg;
+    }
+
+    // 투표 현황 실시간 표시
+    window.onload = () => showVotes();
   </script>
 
 </body>
