@@ -3,238 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>고급 자리 배정 프로그램</title>
+<title>자리 배정 프로그램</title>
 <style>
-  body {
-    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-    background: linear-gradient(135deg, #dbeafe, #eff6ff);
-    color: #1e3a8a;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    min-height: 100vh;
-  }
-  header {
-    background-color: #1d4ed8;
-    color: white;
-    padding: 25px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  h1 { margin: 0; font-size: 1.8rem; }
-  main {
-    max-width: 900px;
-    margin: 40px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-  }
-  input, textarea {
-    border: 1px solid #93c5fd;
-    border-radius: 8px;
-    padding: 10px;
-    width: 80%;
-    max-width: 400px;
-    font-size: 1rem;
-    outline: none;
-    margin-bottom: 10px;
-  }
-  input:focus, textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 4px rgba(37,99,235,0.5);
-  }
-  button {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin: 5px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.25s ease;
-  }
-  button:hover {
-    background-color: #1e40af;
-    transform: translateY(-2px);
-  }
-  #classroom {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    grid-gap: 10px;
-    justify-content: center;
-    margin: 20px 0;
-  }
-  .seat {
-    background: #e0e7ff;
-    height: 80px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-    font-weight: bold;
-    color: #1e3a8a;
-    transition: all 0.3s ease;
-    user-select: none;
-  }
-  .seat.dragging {
-    opacity: 0.6;
-    transform: scale(1.1);
-  }
-  .seat:hover {
-    background: #93c5fd;
-    transform: scale(1.05);
-  }
-  footer {
-    margin-top: 30px;
-    font-size: 0.8rem;
-    color: #64748b;
-  }
-  #info { color: #475569; margin-top: 10px; font-size: 0.9rem; }
+  body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; margin:0; background: linear-gradient(135deg, #3b82f6, #93c5fd); color: #1e3a8a; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  header { position:sticky; top:0; width:100%; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: #1e3a8a; text-align:center; padding:15px 0; font-weight:700; font-size:1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:10; }
+  main { background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius:20px; box-shadow:0 5px 25px rgba(0,0,0,0.2); width:90%; max-width:900px; padding:30px; margin:40px 0; }
+  h2 { color: #1d4ed8; }
+  input, textarea { border:none; border-radius:10px; padding:12px; width:80%; max-width:400px; margin:8px 0; font-size:1rem; background: rgba(255,255,255,0.9); box-shadow:0 1px 4px rgba(0,0,0,0.1); outline:none; transition:0.3s; }
+  input:focus, textarea:focus { box-shadow:0 0 6px rgba(59,130,246,0.8); }
+  button { background: linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; border-radius:8px; padding:10px 16px; margin:6px; cursor:pointer; font-weight:600; transition:0.25s ease; box-shadow:0 3px 10px rgba(37,99,235,0.3); }
+  button:hover { background: linear-gradient(135deg, #1e40af, #2563eb); transform: translateY(-2px); box-shadow:0 5px 15px rgba(37,99,235,0.4); }
+  #classroom { display:grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap:10px; margin-top:20px; }
+  .seat { background: rgba(255,255,255,0.85); border-radius:12px; height:80px; display:flex; align-items:center; justify-content:center; font-weight:600; color:#1e3a8a; box-shadow:0 2px 6px rgba(0,0,0,0.1); transition: all 0.25s ease; cursor:grab; }
+  .seat:hover { transform: scale(1.05); background: #dbeafe; }
+  .seat.dragging { opacity:0.5; transform: scale(1.1); background: #bfdbfe; }
+  footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
+  #info { color:#475569; margin-top:10px; font-size:0.9rem; min-height:20px; }
+  #vote-section { margin-top:20px; display:none; }
+  @media(max-width:600px){.seat{height:70px;font-size:0.9rem;}}
 </style>
 </head>
 <body>
-
-<header>
-  <h1>🎓 고급 자리 배정 프로그램</h1>
-</header>
-
+<header>🎒 자리 배정 프로그램</header>
 <main>
-  <!-- 로그인 -->
   <section id="login-section">
     <h2>로그인</h2>
-    <input type="text" id="username" placeholder="이름 또는 학번 입력">
+    <input type="text" id="username" placeholder="이름 또는 학번 입력"><br>
     <button onclick="login()">로그인</button>
   </section>
 
-  <!-- 자리 배정 -->
   <section id="seat-section" style="display:none;">
     <h2 id="welcome"></h2>
-
-    <h3>학생 목록 입력</h3>
-    <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력하세요"></textarea><br>
+    <h3>학생 목록 입력 / CSV 업로드</h3>
+    <textarea id="studentList" rows="5" placeholder="학생 이름을 줄바꿈으로 입력"></textarea><br>
+    <input type="file" id="csvFile" accept=".csv"><button onclick="loadCSV()">CSV 업로드</button><br>
     <button onclick="createSeats()">자리 만들기 🪑</button>
-    <button onclick="randomizeSeats()">무작위 섞기 🎲</button>
-    <button onclick="saveSeats()">저장 💾</button>
+    <button onclick="shuffleWithAnimation()">자리 섞기 🎲</button>
+    <button onclick="exportImage()">PNG 저장 📸</button>
     <button onclick="resetSeats()">초기화 🔄</button>
-
     <div id="classroom"></div>
     <div id="info"></div>
+    <div id="vote-section">
+      <h3>자리표를 승인할까요?</h3>
+      <button onclick="vote(true)">찬성 👍</button>
+      <button onclick="vote(false)">반대 👎</button>
+      <div id="vote-info"></div>
+    </div>
   </section>
 </main>
-
 <footer>© 2025 자리 배정 시스템</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 let loggedInUser = null;
 let students = [];
 let seats = [];
 let draggedSeat = null;
+let votes = {};
+let voteSection = document.getElementById("vote-section");
 
-// ✅ 로그인
-function login() {
-  const name = document.getElementById('username').value.trim();
-  if (name === "") return alert("이름을 입력하세요!");
+// 로그인
+function login(){
+  const name = document.getElementById("username").value.trim();
+  if(!name) return alert("이름을 입력하세요!");
   loggedInUser = name;
-  document.getElementById('login-section').style.display = 'none';
-  document.getElementById('seat-section').style.display = 'block';
-  document.getElementById('welcome').innerText = `${name}님, 환영합니다 👋`;
+  document.getElementById("login-section").style.display="none";
+  document.getElementById("seat-section").style.display="block";
+  document.getElementById("welcome").innerText=`${name}님, 환영합니다 👋`;
   loadSeats();
 }
 
-// 🎓 학생 목록 → 자리 생성
-function createSeats() {
-  const list = document.getElementById('studentList').value.trim();
-  if (!list) return alert("학생 목록을 입력하세요!");
-  students = list.split("\n").filter(s => s.trim() !== "");
+// CSV 읽기
+function loadCSV(){
+  const file = document.getElementById("csvFile").files[0];
+  if(!file) return alert("파일 선택 필요");
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const text = e.target.result;
+    students = text.split("\n").map(s=>s.trim()).filter(s=>s);
+    document.getElementById("studentList").value=students.join("\n");
+    generateSeats(students);
+    updateInfo(`${students.length}명의 학생 목록 로드 ✅`);
+  };
+  reader.readAsText(file,"UTF-8");
+}
+
+// 자리 생성
+function createSeats(){
+  const list = document.getElementById("studentList").value.trim();
+  if(!list) return alert("학생 목록을 입력하세요!");
+  students=list.split("\n").map(s=>s.trim()).filter(s=>s);
   generateSeats(students);
   updateInfo(`총 ${students.length}명의 학생 자리 생성 완료 ✅`);
 }
 
-// 🪑 자리 생성 함수
-function generateSeats(names) {
-  const container = document.getElementById('classroom');
-  container.innerHTML = "";
-  seats = [];
-
-  names.forEach((name, idx) => {
-    const seat = document.createElement('div');
-    seat.classList.add('seat');
-    seat.textContent = name;
-    seat.draggable = true;
-
-    // 드래그 이벤트
-    seat.addEventListener('dragstart', e => {
-      draggedSeat = seat;
-      seat.classList.add('dragging');
-    });
-    seat.addEventListener('dragend', e => {
-      seat.classList.remove('dragging');
-      draggedSeat = null;
-      saveSeats();
-    });
-    seat.addEventListener('dragover', e => e.preventDefault());
-    seat.addEventListener('drop', e => {
+// 자리 DOM 생성
+function generateSeats(names){
+  const container=document.getElementById("classroom");
+  container.innerHTML="";
+  seats=[];
+  names.forEach(name=>{
+    const seat=document.createElement("div");
+    seat.classList.add("seat");
+    seat.textContent=name;
+    seat.draggable=true;
+    seat.addEventListener("dragstart",e=>{draggedSeat=seat; seat.classList.add("dragging");});
+    seat.addEventListener("dragend",e=>{seat.classList.remove("dragging"); draggedSeat=null; saveSeats();});
+    seat.addEventListener("dragover",e=>e.preventDefault());
+    seat.addEventListener("drop",e=>{
       e.preventDefault();
-      if (draggedSeat && draggedSeat !== seat) {
-        const temp = seat.textContent;
-        seat.textContent = draggedSeat.textContent;
-        draggedSeat.textContent = temp;
+      if(draggedSeat && draggedSeat!==seat){
+        [seat.textContent, draggedSeat.textContent]=[draggedSeat.textContent, seat.textContent];
         saveSeats();
       }
     });
-
     seats.push(seat);
     container.appendChild(seat);
   });
+  votes={};
+  voteSection.style.display="none";
 }
 
-// 🎲 무작위 자리 섞기
-function randomizeSeats() {
-  seats.sort(() => Math.random() - 0.5);
-  const container = document.getElementById('classroom');
-  container.innerHTML = "";
-  seats.forEach(seat => container.appendChild(seat));
-  saveSeats();
-  updateInfo("자리를 무작위로 섞었습니다 🎲");
+// 자리 섞기 애니메이션
+function shuffleWithAnimation(){
+  if(seats.length===0) return;
+  let iterations=5;
+  let count=0;
+  const info=document.getElementById("info");
+  const interval=setInterval(()=>{
+    for(let s of seats){
+      s.textContent=students[Math.floor(Math.random()*students.length)];
+    }
+    info.innerText=["어떻게 나올까요?","잠깐만요...","조금만 기다려요..."][count%3];
+    count++;
+    if(count>=iterations){
+      clearInterval(interval);
+      seats.sort(()=>Math.random()-0.5);
+      const container=document.getElementById("classroom");
+      container.innerHTML="";
+      seats.forEach(s=>container.appendChild(s));
+      saveSeats();
+      info.innerText="자리 섞기 완료! ✅ 투표를 진행해주세요.";
+      voteSection.style.display="block";
+      votes={};
+      document.getElementById("vote-info").innerText="";
+    }
+  },500);
 }
 
-// 💾 저장 (localStorage)
-function saveSeats() {
-  if (!loggedInUser) return;
-  const current = seats.map(s => s.textContent);
-  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
-  localStorage.setItem(`students_${loggedInUser}`, document.getElementById('studentList').value);
-  updateInfo("자리 배정이 저장되었습니다 ✅");
-}
-
-// 📥 불러오기
-function loadSeats() {
-  const saved = localStorage.getItem(`seats_${loggedInUser}`);
-  const list = localStorage.getItem(`students_${loggedInUser}`);
-  if (list) document.getElementById('studentList').value = list;
-  if (saved) {
-    const data = JSON.parse(saved);
-    generateSeats(data);
-    updateInfo("이전 자리 배정을 불러왔습니다 📂");
+// 투표
+function vote(agree){
+  if(!loggedInUser) return;
+  votes[loggedInUser]=agree;
+  document.getElementById("vote-info").innerText=`현재 투표: ${Object.keys(votes).length}명`;
+  const total=students.length;
+  const yes=Object.values(votes).filter(v=>v).length;
+  if(Object.keys(votes).length===total){
+    if(yes>total/2){
+      updateInfo("과반수 승인! 자리 확정 ✅");
+      voteSection.style.display="none";
+    }else{
+      updateInfo("과반수 미달! 자리 다시 섞습니다 🔄");
+      setTimeout(()=>shuffleWithAnimation(),1000);
+    }
   }
 }
 
-// 🔁 초기화
-function resetSeats() {
-  if (confirm("모든 데이터를 삭제하시겠습니까?")) {
+// 저장
+function saveSeats(){
+  if(!loggedInUser) return;
+  const current=seats.map(s=>s.textContent);
+  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(current));
+  localStorage.setItem(`students_${loggedInUser}`, document.getElementById("studentList").value);
+}
+
+// 불러오기
+function loadSeats(){
+  const saved=localStorage.getItem(`seats_${loggedInUser}`);
+  const list=localStorage.getItem(`students_${loggedInUser}`);
+  if(list) document.getElementById("studentList").value=list;
+  if(saved) generateSeats(JSON.parse(saved));
+}
+
+// 초기화
+function resetSeats(){
+  if(confirm("모든 데이터를 삭제하시겠습니까?")){
     localStorage.removeItem(`seats_${loggedInUser}`);
     localStorage.removeItem(`students_${loggedInUser}`);
-    document.getElementById('studentList').value = "";
-    document.getElementById('classroom').innerHTML = "";
+    document.getElementById("studentList").value="";
+    document.getElementById("classroom").innerHTML="";
     updateInfo("자리 배정이 초기화되었습니다 🧹");
+    voteSection.style.display="none";
   }
 }
 
-// 메시지 표시
-function updateInfo(msg) {
-  document.getElementById('info').innerText = msg;
+// PNG 저장
+function exportImage(){
+  html2canvas(document.getElementById("classroom")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="자리배정.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  });
 }
+
+function updateInfo(msg){ document.getElementById("info").innerText=msg; }
 </script>
 </body>
 </html>
