@@ -80,7 +80,7 @@ button:hover {
   min-height:200px;
   line-height:1.8;
   font-size:1rem;
-  white-space:pre; /* 공백 유지 */
+  white-space:pre;
 }
 .seat {
   display:inline-block;
@@ -90,10 +90,25 @@ button:hover {
   margin:2px;
   cursor:grab;
 }
-.seat.dragging { opacity:0.5; background: #bfdbfe; }
-footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
-#info { color:#475569; margin-top:10px; font-size:0.9rem; min-height:20px; }
-#vote-section { margin-top:20px; display:none; }
+#vote-modal {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+#vote-box {
+  background:white;
+  border-radius:10px;
+  padding:20px 30px;
+  text-align:center;
+  width:90%;
+  max-width:400px;
+}
+#vote-result { margin-top:15px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -124,15 +139,20 @@ footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
 
   <div id="classroom"></div>
   <div id="info"></div>
-
-  <div id="vote-section">
-    <h3>자리표를 승인할까요?</h3>
-    <button onclick="vote(true)">찬성 👍</button>
-    <button onclick="vote(false)">반대 👎</button>
-    <div id="vote-info"></div>
-  </div>
+  <button id="open-vote" style="display:none;" onclick="openVote()">🗳️ 투표장 열기</button>
 </section>
 </main>
+
+<div id="vote-modal">
+  <div id="vote-box">
+    <h3 id="vote-title">투표 중...</h3>
+    <p id="vote-student"></p>
+    <button onclick="castVote(true)">찬성 👍</button>
+    <button onclick="castVote(false)">반대 👎</button>
+    <div id="vote-result"></div>
+  </div>
+</div>
+
 <footer>© 2025 자리 배정 시스템</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -140,37 +160,31 @@ footer { text-align:center; color:#f0f9ff; margin-bottom:30px; }
 let loggedInUser=null;
 let students=[];
 let seats=[];
-let votes={};
-let voteSection=document.getElementById("vote-section");
+let currentVoteIndex=0;
+let voteResults={};
 
 // 회원가입
 function register(){
-  const name = document.getElementById("username").value.trim();
-  const pw = document.getElementById("password").value;
-  if(!name || !pw) return alert("이름과 비밀번호를 모두 입력하세요!");
-
-  if(localStorage.getItem(`pw_${name}`)){
-    return alert("이미 존재하는 이름입니다. 다른 이름을 사용하세요.");
-  }
-
-  localStorage.setItem(`pw_${name}`, pw);
+  const name=document.getElementById("username").value.trim();
+  const pw=document.getElementById("password").value;
+  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요!");
+  if(localStorage.getItem(`pw_${name}`)) return alert("이미 존재하는 이름입니다!");
+  localStorage.setItem(`pw_${name}`,pw);
   alert("회원가입 완료 ✅ 이제 로그인해주세요.");
 }
 
 // 로그인
 function login(){
-  const name = document.getElementById("username").value.trim();
-  const pw = document.getElementById("password").value;
-  if(!name || !pw) return alert("이름과 비밀번호를 모두 입력하세요!");
-
-  const savedPw = localStorage.getItem(`pw_${name}`);
+  const name=document.getElementById("username").value.trim();
+  const pw=document.getElementById("password").value;
+  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요!");
+  const savedPw=localStorage.getItem(`pw_${name}`);
   if(!savedPw) return alert("등록되지 않은 사용자입니다. 회원가입 해주세요.");
-  if(savedPw !== pw) return alert("비밀번호가 틀렸습니다!");
-
-  loggedInUser = name;
-  document.getElementById("login-section").style.display = "none";
-  document.getElementById("seat-section").style.display = "block";
-  document.getElementById("welcome").innerText = `${name}님, 환영합니다 👋`;
+  if(savedPw!==pw) return alert("비밀번호가 틀렸습니다!");
+  loggedInUser=name;
+  document.getElementById("login-section").style.display="none";
+  document.getElementById("seat-section").style.display="block";
+  document.getElementById("welcome").innerText=`${name}님, 환영합니다 👋`;
   loadSeats();
 }
 
@@ -179,138 +193,107 @@ function loadCSV(){
   const file=document.getElementById("csvFile").files[0];
   if(!file) return alert("파일 선택 필요");
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=e=>{
     const text=e.target.result;
     students=text.split("\n").map(s=>s.trim()).filter(s=>s);
     document.getElementById("studentList").value=students.join("\n");
-    updateInfo(`${students.length}명의 학생 목록 로드 ✅`);
   };
   reader.readAsText(file,"UTF-8");
 }
 
-// 자리 생성
+// 자리 만들기
 function createSeats(){
   const list=document.getElementById("studentList").value.trim();
   const rows=parseInt(document.getElementById("rows").value);
   const cols=parseInt(document.getElementById("cols").value);
-
   if(!list) return alert("학생 목록을 입력하세요!");
-  if(!rows || !cols) return alert("행과 열을 입력하세요!");
+  if(!rows||!cols) return alert("행과 열을 입력하세요!");
   students=list.split("\n").map(s=>s.trim()).filter(s=>s);
-
-  if(rows*cols < students.length){
-    return alert(`행 x 열이 학생 수보다 작습니다! 학생: ${students.length}, 자리: ${rows*cols}`);
-  }
-
-  generateSeats(students, rows, cols);
-  updateInfo(`총 ${students.length}명의 학생, ${rows}행 x ${cols}열로 자리 생성 ✅`);
+  if(rows*cols<students.length) return alert("자리보다 학생이 많습니다!");
+  generateSeats(students,rows,cols);
 }
 
 // 자리 표시
-function generateSeats(names, rows, cols){
+function generateSeats(names,rows,cols){
   const container=document.getElementById("classroom");
   container.innerHTML="";
   seats=[];
-
   let idx=0;
   for(let r=0;r<rows;r++){
     let line="";
     for(let c=0;c<cols;c++){
-      const seatName = names[idx] || "빈자리";
+      const seatName=names[idx]||"빈자리";
       const span=document.createElement("span");
       span.classList.add("seat");
-      span.textContent = seatName;
-
-      // 드래그 이벤트
-      span.draggable=true;
-      span.addEventListener("dragstart",e=>{span.classList.add("dragging"); e.dataTransfer.setData("text/plain","");});
-      span.addEventListener("dragend",e=>{span.classList.remove("dragging"); saveSeats();});
-      span.addEventListener("dragover",e=>e.preventDefault());
-      span.addEventListener("drop",e=>{
-        const dragging=document.querySelector(".dragging");
-        if(dragging && dragging!==span){
-          [span.textContent, dragging.textContent]=[dragging.textContent, span.textContent];
-          saveSeats();
-        }
-      });
-
+      span.textContent=seatName;
       seats.push(span);
-      line += seatName + " ";
+      line+=seatName+" ";
       idx++;
     }
-    container.innerHTML += line + "<br>";
+    container.innerHTML+=line+"<br>";
   }
-
-  votes={};
-  voteSection.style.display="none";
+  document.getElementById("open-vote").style.display="none";
 }
 
-// 자리 섞기 애니메이션
+// 섞기
 function shuffleWithAnimation(){
-  if(seats.length===0) return;
-  let iterations=5;
-  let count=0;
+  if(students.length===0) return;
   const info=document.getElementById("info");
+  let count=0;
   const interval=setInterval(()=>{
     for(let s of seats){
-      s.textContent=students[Math.floor(Math.random()*students.length)] || "빈자리";
+      s.textContent=students[Math.floor(Math.random()*students.length)]||"빈자리";
     }
     info.innerText=["어떻게 될까요? 🤔","잠깐만 기다려주세요 ⏳","조금만 더..."][count%3];
     count++;
-    if(count>=iterations){
+    if(count>5){
       clearInterval(interval);
-      voteSection.style.display="block";
-      updateInfo("자리 섞기 완료! 승인 투표를 진행하세요 ✅");
+      info.innerText="자리 섞기 완료 ✅ 투표장을 열어주세요.";
+      document.getElementById("open-vote").style.display="block";
     }
   },400);
 }
 
-// 투표
-function vote(choice){
-  votes[loggedInUser]=choice;
-  const allVotes=Object.values(votes);
-  const approveCount=allVotes.filter(v=>v===true).length;
-  const needed=Math.ceil(Object.keys(votes).length/2) || 1;
+// 🗳️ 투표장 열기
+function openVote(){
+  if(students.length===0) return alert("학생 목록이 없습니다!");
+  currentVoteIndex=0;
+  voteResults={};
+  document.getElementById("vote-modal").style.display="flex";
+  showVoteStudent();
+}
 
-  document.getElementById("vote-info").innerText=`찬성 ${approveCount} / 필요 ${needed}명`;
+// 현재 투표자 표시
+function showVoteStudent(){
+  const student=students[currentVoteIndex];
+  document.getElementById("vote-student").innerText=`${student}의 투표`;
+  document.getElementById("vote-result").innerText=`(${currentVoteIndex+1}/${students.length})`;
+}
 
-  if(approveCount>=needed){
-    voteSection.style.display="none";
-    saveSeats();
-    updateInfo("과반수 승인 완료! 자리 확정 ✅");
+// 투표 버튼
+function castVote(choice){
+  const student=students[currentVoteIndex];
+  voteResults[student]=choice;
+  currentVoteIndex++;
+  if(currentVoteIndex<students.length){
+    showVoteStudent();
   } else {
-    updateInfo("과반수 미달, 다시 섞습니다 🔄");
+    finishVoting();
+  }
+}
+
+// 투표 완료
+function finishVoting(){
+  const yesCount=Object.values(voteResults).filter(v=>v===true).length;
+  const total=students.length;
+  document.getElementById("vote-modal").style.display="none";
+  if(yesCount>=Math.ceil(total/2)){
+    alert(`찬성 ${yesCount}/${total} 과반수 승인 ✅ 자리 확정!`);
+  } else {
+    alert(`찬성 ${yesCount}/${total} 과반수 미달 ❌ 다시 섞습니다.`);
     shuffleWithAnimation();
   }
 }
-
-// 저장 & 불러오기
-function saveSeats(){
-  if(!loggedInUser) return;
-  localStorage.setItem(`students_${loggedInUser}`, students.join("\n"));
-  localStorage.setItem(`grid_${loggedInUser}`, JSON.stringify({rows:document.getElementById("rows").value, cols:document.getElementById("cols").value}));
-  localStorage.setItem(`seats_${loggedInUser}`, JSON.stringify(seats.map(s=>s.textContent)));
-}
-
-function loadSeats(){
-  if(!loggedInUser) return;
-  const savedSeats=JSON.parse(localStorage.getItem(`seats_${loggedInUser}`)||"[]");
-  const savedStudents=localStorage.getItem(`students_${loggedInUser}`)||"";
-  const savedGrid=JSON.parse(localStorage.getItem(`grid_${loggedInUser}`)||"{}");
-
-  if(savedStudents) document.getElementById("studentList").value=savedStudents;
-  if(savedGrid.rows) document.getElementById("rows").value=savedGrid.rows;
-  if(savedGrid.cols) document.getElementById("cols").value=savedGrid.cols;
-
-  if(savedSeats.length>0){
-    students=savedSeats.filter(s=>s!=="빈자리");
-    generateSeats(students, savedGrid.rows, savedGrid.cols);
-    updateInfo("이전 자리 배치 불러오기 ✅");
-  }
-}
-
-// 상태 표시
-function updateInfo(msg){ document.getElementById("info").innerText=msg; }
 
 // PNG 저장
 function exportImage(){
@@ -322,17 +305,19 @@ function exportImage(){
   });
 }
 
+// 자리 불러오기
+function loadSeats(){
+  const savedStudents=localStorage.getItem(`students_${loggedInUser}`)||"";
+  if(savedStudents) document.getElementById("studentList").value=savedStudents;
+}
+
 // 초기화
 function resetSeats(){
-  students=[];
-  seats=[];
-  votes={};
+  students=[]; seats=[];
   document.getElementById("classroom").innerHTML="";
   document.getElementById("studentList").value="";
-  document.getElementById("rows").value="";
-  document.getElementById("cols").value="";
-  voteSection.style.display="none";
-  updateInfo("초기화 완료 🔄");
+  document.getElementById("info").innerText="";
+  document.getElementById("open-vote").style.display="none";
 }
 </script>
 </body>
