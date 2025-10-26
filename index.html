@@ -163,7 +163,7 @@ let seats=[];
 let currentVoteIndex=0;
 let voteResults={};
 
-// 회원가입
+// ✅ 회원가입
 function register(){
   const name=document.getElementById("username").value.trim();
   const pw=document.getElementById("password").value;
@@ -173,7 +173,7 @@ function register(){
   alert("회원가입 완료 ✅ 이제 로그인해주세요.");
 }
 
-// 로그인
+// ✅ 로그인
 function login(){
   const name=document.getElementById("username").value.trim();
   const pw=document.getElementById("password").value;
@@ -188,7 +188,7 @@ function login(){
   loadSeats();
 }
 
-// CSV 업로드
+// ✅ CSV 업로드
 function loadCSV(){
   const file=document.getElementById("csvFile").files[0];
   if(!file) return alert("파일 선택 필요");
@@ -201,7 +201,7 @@ function loadCSV(){
   reader.readAsText(file,"UTF-8");
 }
 
-// 자리 만들기
+// ✅ 자리 만들기
 function createSeats(){
   const list=document.getElementById("studentList").value.trim();
   const rows=parseInt(document.getElementById("rows").value);
@@ -213,7 +213,7 @@ function createSeats(){
   generateSeats(students,rows,cols);
 }
 
-// 자리 표시
+// ✅ 자리 표시
 function generateSeats(names,rows,cols){
   const container=document.getElementById("classroom");
   container.innerHTML="";
@@ -235,7 +235,7 @@ function generateSeats(names,rows,cols){
   document.getElementById("open-vote").style.display="none";
 }
 
-// 섞기
+// ✅ 자리 섞기 (수정된 완전 버전)
 function shuffleWithAnimation(){
   if(students.length===0) return;
   const info=document.getElementById("info");
@@ -248,13 +248,21 @@ function shuffleWithAnimation(){
     count++;
     if(count>5){
       clearInterval(interval);
+      // 실제 섞기 (Fisher-Yates)
+      for(let i=students.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [students[i],students[j]]=[students[j],students[i]];
+      }
+      const rows=parseInt(document.getElementById("rows").value);
+      const cols=parseInt(document.getElementById("cols").value);
+      generateSeats(students,rows,cols);
       info.innerText="자리 섞기 완료 ✅ 투표장을 열어주세요.";
       document.getElementById("open-vote").style.display="block";
     }
   },400);
 }
 
-// 🗳️ 투표장 열기
+// ✅ 투표장 열기
 function openVote(){
   if(students.length===0) return alert("학생 목록이 없습니다!");
   currentVoteIndex=0;
@@ -270,7 +278,7 @@ function showVoteStudent(){
   document.getElementById("vote-result").innerText=`(${currentVoteIndex+1}/${students.length})`;
 }
 
-// 투표 버튼
+// 투표
 function castVote(choice){
   const student=students[currentVoteIndex];
   voteResults[student]=choice;
@@ -282,7 +290,7 @@ function castVote(choice){
   }
 }
 
-// 투표 완료
+// 투표 결과
 function finishVoting(){
   const yesCount=Object.values(voteResults).filter(v=>v===true).length;
   const total=students.length;
@@ -305,7 +313,7 @@ function exportImage(){
   });
 }
 
-// 자리 불러오기
+// 저장된 데이터 불러오기
 function loadSeats(){
   const savedStudents=localStorage.getItem(`students_${loggedInUser}`)||"";
   if(savedStudents) document.getElementById("studentList").value=savedStudents;
