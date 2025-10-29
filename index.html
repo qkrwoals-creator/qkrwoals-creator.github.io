@@ -8,8 +8,8 @@
 body {
   font-family: 'Pretendard','Noto Sans KR',sans-serif;
   margin:0;
-  background: linear-gradient(135deg,#0f172a,#1e293b);
-  color:#e2e8f0;
+  background:#000;
+  color:#fff;
   min-height:100vh;
   display:flex;
   flex-direction:column;
@@ -19,28 +19,26 @@ header {
   position:sticky;
   top:0;
   width:100%;
-  background: rgba(30,41,59,0.8);
-  backdrop-filter: blur(10px);
-  color:#f8fafc;
+  background:#111;
+  color:#fff;
   text-align:center;
   padding:15px 0;
   font-weight:700;
   font-size:1.5rem;
-  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  box-shadow:0 2px 8px rgba(0,0,0,0.8);
   z-index:10;
 }
 main {
-  background: rgba(15,23,42,0.9);
-  backdrop-filter: blur(15px);
+  background:#111;
   border-radius:20px;
   box-shadow:0 5px 25px rgba(0,0,0,0.7);
   width:90%;
   max-width:900px;
   padding:30px;
   margin:40px 0;
-  color:#f1f5f9;
+  color:#fff;
 }
-h2 { color: #60a5fa; }
+h2 { color:#fff; }
 input, textarea {
   border:none;
   border-radius:10px;
@@ -49,18 +47,18 @@ input, textarea {
   max-width:400px;
   margin:8px 0;
   font-size:1rem;
-  background: rgba(255,255,255,0.1);
-  color:#f8fafc;
+  background:#222;
+  color:#fff;
   box-shadow:inset 0 1px 4px rgba(255,255,255,0.1);
   outline:none;
   transition:0.3s;
 }
 input:focus, textarea:focus {
-  box-shadow:0 0 6px rgba(96,165,250,0.8);
+  box-shadow:0 0 6px rgba(255,255,255,0.8);
 }
 button {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color:white;
+  background:#fff;
+  color:#000;
   border:none;
   border-radius:8px;
   padding:10px 16px;
@@ -68,17 +66,17 @@ button {
   cursor:pointer;
   font-weight:600;
   transition:0.25s ease;
-  box-shadow:0 3px 10px rgba(37,99,235,0.4);
+  box-shadow:0 3px 10px rgba(255,255,255,0.3);
 }
 button:hover {
-  background: linear-gradient(135deg,#1e40af,#2563eb);
-  transform: translateY(-2px);
-  box-shadow:0 5px 15px rgba(37,99,235,0.6);
+  background:#ddd;
+  transform:translateY(-2px);
+  box-shadow:0 5px 15px rgba(255,255,255,0.5);
 }
 #classroom {
   margin-top:20px;
   font-weight:600;
-  color:#f8fafc;
+  color:#fff;
   min-height:200px;
   line-height:1.8;
   font-size:1rem;
@@ -88,11 +86,11 @@ button:hover {
   display:inline-block;
   padding:6px 12px;
   border-radius:8px;
-  background: rgba(255,255,255,0.1);
-  color:#e2e8f0;
+  background:#222;
+  color:#fff;
   margin:3px;
   cursor:grab;
-  border:1px solid rgba(255,255,255,0.15);
+  border:1px solid #444;
 }
 #vote-modal {
   position:fixed;
@@ -105,19 +103,19 @@ button:hover {
   z-index:100;
 }
 #vote-box {
-  background:#1e293b;
+  background:#111;
   border-radius:10px;
   padding:20px 30px;
   text-align:center;
   width:90%;
   max-width:400px;
-  color:#f8fafc;
+  color:#fff;
   box-shadow:0 4px 20px rgba(0,0,0,0.8);
 }
-#vote-result { margin-top:15px; font-weight:600; color:#93c5fd; }
+#vote-result { margin-top:15px; font-weight:600; color:#fff; }
 footer {
   margin-bottom:20px;
-  color:#64748b;
+  color:#666;
   font-size:0.9rem;
 }
 </style>
@@ -156,7 +154,7 @@ footer {
 
 <div id="vote-modal">
   <div id="vote-box">
-    <h3 id="vote-title">투표 중...</h3>
+    <h3 id="vote-title">투표 중</h3>
     <p id="vote-student"></p>
     <button onclick="castVote(true)">찬성</button>
     <button onclick="castVote(false)">반대</button>
@@ -177,29 +175,29 @@ let voteResults={};
 function register(){
   const name=document.getElementById("username").value.trim();
   const pw=document.getElementById("password").value;
-  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요!");
-  if(localStorage.getItem(`pw_${name}`)) return alert("이미 존재하는 이름입니다!");
+  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요.");
+  if(localStorage.getItem(`pw_${name}`)) return alert("이미 존재하는 이름입니다.");
   localStorage.setItem(`pw_${name}`,pw);
-  alert("회원가입 완료, 이제 로그인해주세요.");
+  alert("회원가입 완료. 로그인해주세요.");
 }
 
 function login(){
   const name=document.getElementById("username").value.trim();
   const pw=document.getElementById("password").value;
-  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요!");
+  if(!name||!pw) return alert("이름과 비밀번호를 모두 입력하세요.");
   const savedPw=localStorage.getItem(`pw_${name}`);
-  if(!savedPw) return alert("등록되지 않은 사용자입니다. 회원가입 해주세요.");
-  if(savedPw!==pw) return alert("비밀번호가 틀렸습니다!");
+  if(!savedPw) return alert("등록되지 않은 사용자입니다.");
+  if(savedPw!==pw) return alert("비밀번호가 틀렸습니다.");
   loggedInUser=name;
   document.getElementById("login-section").style.display="none";
   document.getElementById("seat-section").style.display="block";
-  document.getElementById("welcome").innerText=`${name}님, 환영합니다`;
+  document.getElementById("welcome").innerText=`${name}님 환영합니다`;
   loadSeats();
 }
 
 function loadCSV(){
   const file=document.getElementById("csvFile").files[0];
-  if(!file) return alert("파일 선택 필요");
+  if(!file) return alert("파일을 선택하세요.");
   const reader=new FileReader();
   reader.onload=e=>{
     const text=e.target.result;
@@ -213,10 +211,10 @@ function createSeats(){
   const list=document.getElementById("studentList").value.trim();
   const rows=parseInt(document.getElementById("rows").value);
   const cols=parseInt(document.getElementById("cols").value);
-  if(!list) return alert("학생 목록을 입력하세요!");
-  if(!rows||!cols) return alert("행과 열을 입력하세요!");
+  if(!list) return alert("학생 목록을 입력하세요.");
+  if(!rows||!cols) return alert("행과 열을 입력하세요.");
   students=list.split("\n").map(s=>s.trim()).filter(s=>s);
-  if(rows*cols<students.length) return alert("자리보다 학생이 많습니다!");
+  if(rows*cols<students.length) return alert("자리보다 학생이 많습니다.");
   generateSeats(students,rows,cols);
 }
 
@@ -249,7 +247,7 @@ function shuffleWithAnimation(){
     for(let s of seats){
       s.textContent=students[Math.floor(Math.random()*students.length)]||"빈자리";
     }
-    info.innerText=["어떻게 될까요?","잠깐만 기다려주세요..","조금만 더..."][count%3];
+    info.innerText=["자리 섞는 중","잠시만 기다려주세요","진행 중"][count%3];
     count++;
     if(count>5){
       clearInterval(interval);
@@ -260,14 +258,14 @@ function shuffleWithAnimation(){
       const rows=parseInt(document.getElementById("rows").value);
       const cols=parseInt(document.getElementById("cols").value);
       generateSeats(students,rows,cols);
-      info.innerText="자리 섞기 완료, 투표장을 열어주세요.";
+      info.innerText="자리 섞기 완료";
       document.getElementById("open-vote").style.display="block";
     }
   },800);
 }
 
 function openVote(){
-  if(students.length===0) return alert("학생 목록이 없습니다!");
+  if(students.length===0) return alert("학생 목록이 없습니다.");
   currentVoteIndex=0;
   voteResults={};
   document.getElementById("vote-modal").style.display="flex";
@@ -290,14 +288,15 @@ function castVote(choice){
     finishVoting();
   }
 }
+
 function finishVoting(){
   const yesCount=Object.values(voteResults).filter(v=>v===true).length;
   const total=students.length;
   document.getElementById("vote-modal").style.display="none";
   if(yesCount>=Math.ceil(total/2)){
-    alert(`찬성 ${yesCount}/${total} 과반수 승인, 자리 확정!`);
+    alert(`찬성 ${yesCount}/${total} 과반수 승인`);
   } else {
-    alert(`찬성 ${yesCount}/${total} 과반수 미달, 다시 섞습니다.`);
+    alert(`찬성 ${yesCount}/${total} 과반수 미달`);
     shuffleWithAnimation();
   }
 }
