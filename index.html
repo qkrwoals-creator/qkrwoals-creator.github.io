@@ -19,26 +19,26 @@ header {
   position:sticky;
   top:0;
   width:100%;
-  background:#111;
+  background:#000;
   color:#fff;
   text-align:center;
   padding:15px 0;
   font-weight:700;
   font-size:1.5rem;
-  box-shadow:0 2px 8px rgba(0,0,0,0.8);
+  box-shadow:0 2px 8px rgba(255,255,255,0.1);
   z-index:10;
 }
 main {
-  background:#111;
+  background:#000;
   border-radius:20px;
-  box-shadow:0 5px 25px rgba(0,0,0,0.7);
+  box-shadow:0 0 20px rgba(255,255,255,0.1);
   width:90%;
   max-width:900px;
   padding:30px;
   margin:40px 0;
   color:#fff;
 }
-h2 { color:#fff; }
+h2, h3 { color:#fff; }
 input, textarea {
   border:none;
   border-radius:10px;
@@ -47,7 +47,7 @@ input, textarea {
   max-width:400px;
   margin:8px 0;
   font-size:1rem;
-  background:#222;
+  background:#111;
   color:#fff;
   box-shadow:inset 0 1px 4px rgba(255,255,255,0.1);
   outline:none;
@@ -66,12 +66,12 @@ button {
   cursor:pointer;
   font-weight:600;
   transition:0.25s ease;
-  box-shadow:0 3px 10px rgba(255,255,255,0.3);
+  box-shadow:0 3px 10px rgba(255,255,255,0.2);
 }
 button:hover {
-  background:#ddd;
+  background:#ccc;
   transform:translateY(-2px);
-  box-shadow:0 5px 15px rgba(255,255,255,0.5);
+  box-shadow:0 5px 15px rgba(255,255,255,0.3);
 }
 #classroom {
   margin-top:20px;
@@ -86,36 +86,36 @@ button:hover {
   display:inline-block;
   padding:6px 12px;
   border-radius:8px;
-  background:#222;
+  background:#111;
   color:#fff;
   margin:3px;
   cursor:grab;
-  border:1px solid #444;
+  border:1px solid #333;
 }
 #vote-modal {
   position:fixed;
   top:0; left:0;
   width:100%; height:100%;
-  background:rgba(0,0,0,0.7);
+  background:rgba(0,0,0,0.9);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:100;
 }
 #vote-box {
-  background:#111;
+  background:#000;
   border-radius:10px;
   padding:20px 30px;
   text-align:center;
   width:90%;
   max-width:400px;
   color:#fff;
-  box-shadow:0 4px 20px rgba(0,0,0,0.8);
+  box-shadow:0 0 20px rgba(255,255,255,0.1);
 }
 #vote-result { margin-top:15px; font-weight:600; color:#fff; }
 footer {
   margin-bottom:20px;
-  color:#666;
+  color:#555;
   font-size:0.9rem;
 }
 </style>
